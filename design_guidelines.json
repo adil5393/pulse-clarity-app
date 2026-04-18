@@ -1,0 +1,126 @@
+{
+  "theme": "light_and_dark",
+  "archetype": "Archetype 4: Swiss & High-Contrast",
+  "typography": {
+    "heading_font": "Outfit, sans-serif",
+    "body_font": "Manrope, sans-serif",
+    "instructions": "Use Outfit for all headings (H1-H4) and Manrope for body text. Apply tracking-tight to headings. Import these via @fontsource or Google Fonts in index.css.",
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm text-muted-foreground",
+      "overline": "text-xs font-bold uppercase tracking-[0.2em]"
+    }
+  },
+  "colors": {
+    "light": {
+      "background": "#FFFFFF",
+      "foreground": "#0A0F1C",
+      "surface": "#F8FAFC",
+      "primary": "#4F46E5",
+      "primary_foreground": "#FFFFFF",
+      "accent": "#06B6D4",
+      "accent_foreground": "#FFFFFF",
+      "success": "#22C55E",
+      "border": "#E2E8F0",
+      "muted": "#F1F5F9",
+      "muted_foreground": "#64748B"
+    },
+    "dark": {
+      "background": "#0A0F1C",
+      "foreground": "#F8FAFC",
+      "surface": "#1E293B",
+      "primary": "#4F46E5",
+      "primary_foreground": "#FFFFFF",
+      "accent": "#06B6D4",
+      "accent_foreground": "#FFFFFF",
+      "success": "#22C55E",
+      "border": "#334155",
+      "muted": "#0F172A",
+      "muted_foreground": "#94A3B8"
+    },
+    "instructions": "Implement these using CSS variables in index.css. Use Indigo for primary actions and Cyan for active states or subtle energetic highlights. Ensure contrast ratios meet APCA standards. DO NOT use generic gray for dark mode; strictly use the tinted #0A0F1C and #1E293B."
+  },
+  "layout_and_spacing": {
+    "general": "Follow 'Generous Spacing Philosophy' for marketing pages (p-8 to p-32) and 'Control Room Grid' for the SaaS dashboard (tight gap-4).",
+    "marketing": {
+      "hero": "Asymmetric layout. Use large typographic headers. Max width container.",
+      "features": "Bento 'Tetris' Grid (e.g., grid-cols-1 md:grid-cols-12 gap-8). Mix tall, square, and wide cells."
+    },
+    "app": {
+      "dashboard": "Dense, full-height layout (h-screen). Fixed top bar, flexible sidebars or tabs.",
+      "chat": "ScrollArea for messages. Messages must have max-w-[70%] to distinguish sender/receiver. Unread badges must be cyan.",
+      "call_ui": "Full-screen immersive. For video: absolute positioning with object-cover. For voice: abstract animated background. Controls must be wrapped in 'Crystal Glassmorphism'."
+    }
+  },
+  "surfaces_and_materials": {
+    "glassmorphism": {
+      "name": "Crystal Variant",
+      "usage": "Call Interface controls, Sticky Headers, Incoming Call Modal",
+      "classes_light": "backdrop-blur-xl bg-white/70 border border-white/40 shadow-sm",
+      "classes_dark": "backdrop-blur-xl bg-black/60 border border-white/10 shadow-lg"
+    },
+    "dashboard_cards": {
+      "usage": "Chat list items, Contacts, Settings sections",
+      "classes": "bg-surface border border-border rounded-xl transition-all hover:shadow-sm"
+    }
+  },
+  "motion_and_interaction": {
+    "libraries": [
+      "framer-motion",
+      "lucide-react"
+    ],
+    "rules": [
+      "Use framer-motion for the Landing page animated call preview and feature grid entrance.",
+      "Add micro-interactions to all buttons: active:scale-95 transition-transform.",
+      "Chat bubbles should have a subtle staggered slide-up entrance.",
+      "Ensure text color changes explicitly on hover (e.g., hover:bg-primary hover:text-white)."
+    ]
+  },
+  "media_and_images": {
+    "instructions": "You MUST use EXACTLY these URLs. DO NOT use placeholders.",
+    "avatars": [
+      {
+        "url": "https://images.unsplash.com/photo-1657180881998-c8a03ef22695?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBhdmF0YXIlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NzY1MjkzMzh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Avatar 1"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1581841064838-a470c740e8ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBhdmF0YXIlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NzY1MjkzMzh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Avatar 2"
+      },
+      {
+        "url": "https://images.pexels.com/photos/36053652/pexels-photo-36053652.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Avatar 3"
+      }
+    ],
+    "logos": [
+      {
+        "url": "https://images.unsplash.com/photo-1551263640-1c007852f616?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwxfHxzdGFydHVwJTIwY29tcGFueSUyMGxvZ298ZW58MHx8fHwxNzc2NTI5MzM4fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Partner Logo 1"
+      },
+      {
+        "url": "https://images.pexels.com/photos/15863044/pexels-photo-15863044.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Partner Logo 2"
+      }
+    ],
+    "backgrounds": {
+      "dark_call_bg": "https://images.unsplash.com/photo-1758551051834-61f10a361b73?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwYWJzdHJhY3QlMjBpbmRpZ28lMjB3YXZlcyUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzc2NTI5MzQ0fDA&ixlib=rb-4.1.0&q=85",
+      "light_call_bg": "https://images.unsplash.com/photo-1728247671946-732430baf974?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwyfHxsaWdodCUyMGFic3RyYWN0JTIwcGVhcmwlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3NjUyOTM0NHww&ixlib=rb-4.1.0&q=85"
+    },
+    "auth_split": "https://images.unsplash.com/photo-1758876202616-1af582182a9b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBvZmZpY2UlMjByZW1vdGUlMjB3b3JrfGVufDB8fHx8MTc3NjUyOTMzOHww&ixlib=rb-4.1.0&q=85"
+  },
+  "component_instructions": {
+    "LandingPage": "Build pure HTML/Tailwind. Hero section must have 'Connect instantly.' prominently displayed. Use framer-motion to create an animated call UI preview that floats.",
+    "Auth": "Split-screen layout. Left side: Marketing imagery (auth_split). Right side: Login/Signup form. Use Shadcn Input, Label, Button.",
+    "Dashboard": "Implement a Top Bar (avatar, search, notifications) and a Tab system (Chats, Calls, Contacts). Use Shadcn Tabs, ScrollArea, Avatar.",
+    "ChatScreen": "Left align standard elements, but visually distinguish sent vs received messages. Include a typing indicator and an input bar with attachment, voice, call, and video icons (use lucide-react).",
+    "CallInterface": "This is a key premium feature. Render full-screen. Background depends on theme (dark_call_bg or light_call_bg). Controls must use the 'Crystal Glassmorphism' surface. Include mute, speaker, camera, screen-share, and a prominent red end button.",
+    "IncomingCallModal": "Use Shadcn Dialog. Apply Glassmorphism. Present Avatar, Name, and Accept (Green) / Decline (Red) buttons.",
+    "FileSharing": "Render a drag-drop zone inside chat or as a modal. Show file preview and an upload progress bar (Shadcn Progress).",
+    "Settings": "Use Shadcn Tabs for Profile, Privacy, Notifications, Storage. Include a Theme Toggle button to switch between Light and Dark mode."
+  },
+  "testing": "All interactive elements MUST have a 'data-testid' attribute (e.g., data-testid='login-submit-button', data-testid='chat-input')."
+}
