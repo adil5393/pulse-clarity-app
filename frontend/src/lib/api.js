@@ -1,7 +1,8 @@
 import axios from "axios";
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-export const API = `${BACKEND_URL}/api`;
-export const WS_URL = BACKEND_URL.replace(/^http/, "ws") + "/api/ws";
+
+const BACKEND_HOST = `${window.location.hostname}:8000`;
+export const API = `http://${BACKEND_HOST}/api`;
+export const WS_URL = `ws://${BACKEND_HOST}/api/ws`;
 
 export const api = axios.create({ baseURL: API });
 api.interceptors.request.use((c) => {

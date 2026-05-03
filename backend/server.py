@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from pathlib import Path
-ROOT_DIR = Path(__file__).parent
+ROOT_DIR = Path(__file__).parent.parent
 load_dotenv(ROOT_DIR / '.env')
 
 import os
@@ -8,7 +8,6 @@ import uuid
 import json
 import bcrypt
 import jwt
-import requests
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict
@@ -27,38 +26,24 @@ db = client[os.environ['DB_NAME']]
 
 JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGO = "HS256"
-STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
-EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
 APP_NAME = os.environ.get("APP_NAME", "pulse-chat")
+LOCAL_UPLOADS = Path(__file__).parent / "uploads"
+LOCAL_UPLOADS.mkdir(exist_ok=True)
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
 
-# ---- Storage ----
-_storage_key: Optional[str] = None
-def init_storage():
-    global _storage_key
-    if _storage_key:
-        return _storage_key
-    try:
-        r = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_KEY}, timeout=30)
-        r.raise_for_status()
-        _storage_key = r.json()["storage_key"]
-    except Exception as e:
-        logger.error(f"Storage init failed: {e}")
-    return _storage_key
-
+# ---- Local file storage ----
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    key = init_storage()
-    r = requests.put(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key, "Content-Type": content_type}, data=data, timeout=120)
-    r.raise_for_status()
-    return r.json()
+    dest = LOCAL_UPLOADS / path.replace("/", "_")
+    dest.write_bytes(data)
+    return {"path": path}
 
-def get_object(path: str):
-    key = init_storage()
-    r = requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
-    r.raise_for_status()
-    return r.content, r.headers.get("Content-Type", "application/octet-stream")
+def get_object(path: str, content_type: str = "application/octet-stream"):
+    dest = LOCAL_UPLOADS / path.replace("/", "_")
+    if not dest.exists():
+        raise HTTPException(404, "File not found")
+    return dest.read_bytes(), content_type
 
 # ---- Auth helpers ----
 def hash_pw(pw: str) -> str:
@@ -182,6 +167,14 @@ async def get_messages(cid: str, user=Depends(current_user)):
     msgs = await db.messages.find({"conversation_id": cid}, {"_id": 0}).sort("created_at", 1).to_list(1000)
     return msgs
 
+@api.delete("/conversations/{cid}/messages")
+async def clear_messages(cid: str, user=Depends(current_user)):
+    convo = await db.conversations.find_one({"id": cid, "members": user["id"]}, {"_id": 0})
+    if not convo:
+        raise HTTPException(404, "Not found")
+    await db.messages.delete_many({"conversation_id": cid})
+    return {"ok": True}
+
 @api.post("/conversations/{cid}/messages")
 async def post_message(cid: str, body: MessageIn, user=Depends(current_user)):
     convo = await db.conversations.find_one({"id": cid, "members": user["id"]}, {"_id": 0})
@@ -222,7 +215,7 @@ async def download(fid: str, auth: str = Query(None), authorization: str = None)
     rec = await db.files.find_one({"id": fid}, {"_id": 0})
     if not rec:
         raise HTTPException(404, "Not found")
-    data, ct = get_object(rec["storage_path"])
+    data, ct = get_object(rec["storage_path"], rec.get("content_type", "application/octet-stream"))
     return FastResponse(content=data, media_type=rec["content_type"])
 
 # ---- WebSocket manager ----
@@ -292,7 +285,6 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.conversations.create_index("members")
     await db.messages.create_index([("conversation_id", 1), ("created_at", 1)])
-    init_storage()
     logger.info("Pulse Chat backend ready")
 
 @app.on_event("shutdown")

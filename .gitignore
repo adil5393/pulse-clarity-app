@@ -3,7 +3,7 @@
 # IDE and editors
 .idea/
 .vscode/
-
+.claude/
 # Dependencies
 node_modules/
 /node_modules
@@ -79,7 +79,16 @@ agenthub/agents/youtube/db
 memory/test_credentials.md
 
 # Mobile development
-android-sdk/-e 
+android-sdk/-e
+android/
+
+# Local uploads (user-generated content)
+backend/uploads/
+
+# Executables
+*.exe
+
+
 # Environment and credential files
 .env
 .env.*
