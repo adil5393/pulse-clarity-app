@@ -14,7 +14,7 @@ function Avi({ name, size="w-10 h-10" }) {
 }
 
 export default function Dashboard() {
-  const { user, logout, wsSend, addHandler } = useAuth();
+  const { user, logout, wsSend, addHandler, wsReady } = useAuth();
   const { theme, toggle } = useTheme();
   const [tab, setTab] = useState("chats");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -52,6 +52,16 @@ export default function Dashboard() {
       });
     }
   }, [active?.id]);
+
+  // Polling fallback — guarantees messages appear even if WebSocket delivery fails
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => {
+      api.get(`/conversations/${active.id}/messages`).then(r => setMessages(r.data));
+    }, 3000);
+    return () => clearInterval(id);
+  }, [active?.id]);
+
   useEffect(() => { scrollRef.current?.scrollTo(0, 9e9); }, [messages]);
 
   // Always-on: status updates must never be missed due to active conversation changes
@@ -149,6 +159,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div title={wsReady ? "Connected" : "Reconnecting…"} className={`w-2 h-2 rounded-full ${wsReady ? "bg-green-500" : "bg-red-500 animate-pulse"}`}/>
           <button onClick={toggle} data-testid="theme-toggle" className="p-2 rounded-lg hover:bg-muted">{theme==="dark"?<Sun className="w-4 h-4"/>:<Moon className="w-4 h-4"/>}</button>
           <button className="p-2 rounded-lg hover:bg-muted"><Bell className="w-4 h-4"/></button>
           <button onClick={logout} data-testid="logout-btn" className="p-2 rounded-lg hover:bg-muted"><LogOut className="w-4 h-4"/></button>
