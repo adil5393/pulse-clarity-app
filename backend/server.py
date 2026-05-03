@@ -264,10 +264,18 @@ async def ws_endpoint(ws: WebSocket, token: str = Query(...)):
     try:
         payload = decode_token(token)
         uid = payload["sub"]
-    except Exception:
+    except Exception as e:
+        logger.warning(f"[WS] token rejected: {e}")
+        await ws.accept()
         await ws.close(code=4001)
         return
-    await manager.connect(uid, ws)
+    logger.info(f"[WS] uid={uid} connecting")
+    try:
+        await manager.connect(uid, ws)
+    except Exception as e:
+        logger.error(f"[WS] uid={uid} accept failed: {e}", exc_info=True)
+        return
+    logger.info(f"[WS] uid={uid} connected")
     try:
         while True:
             data = await ws.receive_json()
@@ -293,6 +301,9 @@ async def ws_endpoint(ws: WebSocket, token: str = Query(...)):
                     )
                     await manager.send(to, {"type": "msg_status_update", "conversation_id": cid, "status": "seen"})
     except WebSocketDisconnect:
+        manager.disconnect(uid, ws)
+    except Exception as e:
+        logger.error(f"[WS] uid={uid} loop error: {e}", exc_info=True)
         manager.disconnect(uid, ws)
 
 @api.get("/presence/{uid}")
