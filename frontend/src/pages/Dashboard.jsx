@@ -26,6 +26,8 @@ export default function Dashboard() {
   const [typing, setTyping] = useState(null);
   const fileRef = useRef(null);
   const scrollRef = useRef(null);
+  const activeRef = useRef(null);
+  const userRef = useRef(null);
 
   const loadConvos = async () => { const { data } = await api.get("/conversations"); setConvos(data); };
   const [peopleSearch, setPeopleSearch] = useState("");
@@ -35,6 +37,9 @@ export default function Dashboard() {
     const { data } = await api.get(`/users?q=${encodeURIComponent(q)}`);
     setUsers(data);
   };
+
+  useEffect(() => { activeRef.current = active; }, [active]);
+  useEffect(() => { userRef.current = user; }, [user]);
 
   useEffect(() => { loadConvos(); }, []);
   useEffect(() => { loadUsers(peopleSearch); }, [peopleSearch]);
@@ -59,22 +64,23 @@ export default function Dashboard() {
   }), []);
 
   useEffect(() => addHandler((d) => {
+    const cur = activeRef.current;
+    const me = userRef.current;
     if (d.type === "message") {
-      if (d.message.sender_id !== user.id) {
-        // Ack delivery for every received message regardless of which conversation is open
+      if (d.message.sender_id !== me?.id) {
         wsSend({ type: "msg_delivered", message_ids: [d.message.id], to: d.message.sender_id });
-        if (active && d.conversation_id === active.id) {
+        if (cur && d.conversation_id === cur.id) {
           setMessages(m => [...m, d.message]);
-          wsSend({ type: "msg_seen", conversation_id: active.id, to: d.message.sender_id });
+          wsSend({ type: "msg_seen", conversation_id: cur.id, to: d.message.sender_id });
         }
       }
       loadConvos();
     } else if (d.type === "typing") {
-      if (active && d.conversation_id === active.id && d.from !== user.id) {
+      if (cur && d.conversation_id === cur.id && d.from !== me?.id) {
         setTyping(d.from); setTimeout(() => setTyping(null), 2000);
       }
     }
-  }), [active, user, wsSend]);
+  }), []);
 
   const isMobile = () => window.innerWidth < 768;
 
