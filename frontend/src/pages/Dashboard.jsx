@@ -29,6 +29,10 @@ export default function Dashboard() {
   const activeRef = useRef(null);
   const userRef = useRef(null);
 
+  // Update refs synchronously during render — never stale when WS messages arrive
+  activeRef.current = active;
+  userRef.current = user;
+
   const loadConvos = async () => { const { data } = await api.get("/conversations"); setConvos(data); };
   const [peopleSearch, setPeopleSearch] = useState("");
 
@@ -37,9 +41,6 @@ export default function Dashboard() {
     const { data } = await api.get(`/users?q=${encodeURIComponent(q)}`);
     setUsers(data);
   };
-
-  useEffect(() => { activeRef.current = active; }, [active]);
-  useEffect(() => { userRef.current = user; }, [user]);
 
   useEffect(() => { loadConvos(); }, []);
   useEffect(() => { loadUsers(peopleSearch); }, [peopleSearch]);
