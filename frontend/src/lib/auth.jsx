@@ -26,8 +26,10 @@ export function AuthProvider({ children }) {
     if (wsRef.current) try { wsRef.current.close(); } catch {}
     const ws = new WebSocket(`${WS_URL}?token=${token}`);
     wsRef.current = ws;
-    ws.onopen = () => setWsReady(true);
-    ws.onclose = () => {
+    ws.onopen = () => { console.log("[WS] connected"); setWsReady(true); };
+    ws.onerror = (e) => console.error("[WS] error:", e.type);
+    ws.onclose = (e) => {
+      console.warn("[WS] closed — code:", e.code, "reason:", e.reason || "(none)", "clean:", e.wasClean);
       setWsReady(false);
       if (localStorage.getItem("token")) {
         reconnectRef.current = setTimeout(() => connectWs(token), 3000);

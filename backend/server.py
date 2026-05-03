@@ -168,6 +168,19 @@ async def get_messages(cid: str, user=Depends(current_user)):
     msgs = await db.messages.find({"conversation_id": cid}, {"_id": 0}).sort("created_at", 1).to_list(1000)
     return msgs
 
+@api.post("/conversations/{cid}/seen")
+async def mark_seen(cid: str, user=Depends(current_user)):
+    convo = await db.conversations.find_one({"id": cid, "members": user["id"]}, {"_id": 0})
+    if not convo:
+        raise HTTPException(404, "Not found")
+    other_ids = [m for m in convo["members"] if m != user["id"]]
+    if other_ids:
+        await db.messages.update_many(
+            {"conversation_id": cid, "sender_id": {"$in": other_ids}, "status": {"$in": ["sent", "delivered"]}},
+            {"$set": {"status": "seen"}}
+        )
+    return {"ok": True}
+
 @api.delete("/conversations/{cid}/messages")
 async def clear_messages(cid: str, user=Depends(current_user)):
     convo = await db.conversations.find_one({"id": cid, "members": user["id"]}, {"_id": 0})

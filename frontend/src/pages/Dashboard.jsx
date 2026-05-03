@@ -48,6 +48,7 @@ export default function Dashboard() {
     if (active) {
       api.get(`/conversations/${active.id}/messages`).then(r => {
         setMessages(r.data);
+        api.post(`/conversations/${active.id}/seen`).catch(() => {});
         if (active.other?.id) wsSend({ type: "msg_seen", conversation_id: active.id, to: active.other.id });
       });
     }
@@ -56,8 +57,15 @@ export default function Dashboard() {
   // Polling fallback — guarantees messages appear even if WebSocket delivery fails
   useEffect(() => {
     if (!active) return;
+    const cid = active.id;
     const id = setInterval(() => {
-      api.get(`/conversations/${active.id}/messages`).then(r => setMessages(r.data));
+      api.get(`/conversations/${cid}/messages`).then(r => {
+        setMessages(r.data);
+        const me = userRef.current;
+        if (me && r.data.some(m => m.sender_id !== me.id && m.status !== "seen")) {
+          api.post(`/conversations/${cid}/seen`).catch(() => {});
+        }
+      });
     }, 3000);
     return () => clearInterval(id);
   }, [active?.id]);
