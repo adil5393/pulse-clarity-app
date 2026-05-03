@@ -83,6 +83,7 @@ class LoginIn(BaseModel):
 class MessageIn(BaseModel):
     text: str = ""
     attachment_id: Optional[str] = None
+    attachment_meta: Optional[Dict] = None
 class ConvoIn(BaseModel):
     user_id: str
 
@@ -122,9 +123,9 @@ async def logout():
 # ---- Users ----
 @api.get("/users")
 async def list_users(q: str = "", user=Depends(current_user)):
-    query = {"id": {"$ne": user["id"]}}
-    if q:
-        query["$or"] = [{"name": {"$regex": q, "$options": "i"}}, {"email": {"$regex": q, "$options": "i"}}]
+    if not q:
+        return []
+    query = {"id": {"$ne": user["id"]}, "$or": [{"name": {"$regex": q, "$options": "i"}}, {"email": {"$regex": q, "$options": "i"}}]}
     users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(100)
     return users
 
@@ -182,7 +183,8 @@ async def post_message(cid: str, body: MessageIn, user=Depends(current_user)):
         raise HTTPException(404, "Not found")
     now = datetime.now(timezone.utc).isoformat()
     msg = {"id": str(uuid.uuid4()), "conversation_id": cid, "sender_id": user["id"],
-           "text": body.text, "attachment_id": body.attachment_id, "status": "sent", "created_at": now}
+           "text": body.text, "attachment_id": body.attachment_id,
+           "attachment_meta": body.attachment_meta, "status": "sent", "created_at": now}
     await db.messages.insert_one(msg.copy())
     await db.conversations.update_one({"id": cid}, {"$set": {"updated_at": now}})
     # broadcast
@@ -258,10 +260,22 @@ async def ws_endpoint(ws: WebSocket, token: str = Query(...)):
                 target = data.get("to")
                 if target:
                     await manager.send(target, {"type": "typing", "from": uid, "conversation_id": data.get("conversation_id")})
-            elif t in ("call_offer", "call_answer", "call_ice", "call_end", "call_ring"):
-                target = data.get("to")
-                if target:
-                    await manager.send(target, {**data, "from": uid})
+            elif t == "msg_delivered":
+                ids = data.get("message_ids", [])
+                to = data.get("to")
+                if ids:
+                    await db.messages.update_many({"id": {"$in": ids}, "status": "sent"}, {"$set": {"status": "delivered"}})
+                if to and ids:
+                    await manager.send(to, {"type": "msg_status_update", "message_ids": ids, "status": "delivered"})
+            elif t == "msg_seen":
+                cid = data.get("conversation_id")
+                to = data.get("to")
+                if cid and to:
+                    await db.messages.update_many(
+                        {"conversation_id": cid, "sender_id": to, "status": {"$in": ["sent", "delivered"]}},
+                        {"$set": {"status": "seen"}}
+                    )
+                    await manager.send(to, {"type": "msg_status_update", "conversation_id": cid, "status": "seen"})
     except WebSocketDisconnect:
         manager.disconnect(uid, ws)
 
