@@ -233,11 +233,14 @@ class ConnectionManager:
             if not self.conns[user_id]:
                 del self.conns[user_id]
     async def send(self, user_id: str, data: dict):
+        dead = []
         for ws in self.conns.get(user_id, []):
             try:
                 await ws.send_json(data)
             except Exception:
-                pass
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect(user_id, ws)
     def online(self, user_id: str) -> bool:
         return user_id in self.conns
 

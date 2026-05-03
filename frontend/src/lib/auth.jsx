@@ -19,15 +19,25 @@ export function AuthProvider({ children }) {
     if (wsRef.current?.readyState === 1) wsRef.current.send(JSON.stringify(obj));
   }, []);
 
+  const reconnectRef = useRef(null);
+
   const connectWs = useCallback((token) => {
+    clearTimeout(reconnectRef.current);
     if (wsRef.current) try { wsRef.current.close(); } catch {}
     const ws = new WebSocket(`${WS_URL}?token=${token}`);
     wsRef.current = ws;
     ws.onopen = () => setWsReady(true);
-    ws.onclose = () => setWsReady(false);
+    ws.onclose = () => {
+      setWsReady(false);
+      if (localStorage.getItem("token")) {
+        reconnectRef.current = setTimeout(() => connectWs(token), 3000);
+      }
+    };
     ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      handlersRef.current.forEach((h) => h(data));
+      try {
+        const data = JSON.parse(e.data);
+        handlersRef.current.forEach((h) => h(data));
+      } catch {}
     };
   }, []);
 
@@ -54,6 +64,7 @@ export function AuthProvider({ children }) {
     } catch (e) { return { ok: false, error: fmtErr(e.response?.data?.detail) }; }
   };
   const logout = () => {
+    clearTimeout(reconnectRef.current);
     localStorage.removeItem("token");
     try { wsRef.current?.close(); } catch {}
     setUser(null);
